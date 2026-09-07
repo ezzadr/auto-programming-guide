@@ -1,0 +1,28 @@
+{
+  "v": 1,
+  "kdf": "PBKDF2-SHA256",
+  "iter": 310000,
+  "salt": "AuiUTHC5p7+mmkPGldAfXw==",
+  "check": "8mfoZ0yetgHXky++zNC1AjSjVSWaCm0DibXtbkjgeQ20HA==",
+  "index": "enc/index.0533d08d.bin",
+  "files": {
+    "INTRODUCTION": "enc/INTRODUCTION.0533d08d.bin",
+    "BMW": "enc/BMW.0533d08d.bin",
+    "CHRYSLER": "enc/CHRYSLER.0533d08d.bin",
+    "GM": "enc/GM.0533d08d.bin",
+    "HONDA": "enc/HONDA.0533d08d.bin",
+    "ISUZU": "enc/ISUZU.0533d08d.bin",
+    "JAGUAR": "enc/JAGUAR.0533d08d.bin",
+    "MAZDA": "enc/MAZDA.0533d08d.bin",
+    "MERCEDES-BENZ": "enc/MERCEDES-BENZ.0533d08d.bin",
+    "NISSAN": "enc/NISSAN.0533d08d.bin",
+    "PORSCHE": "enc/PORSCHE.0533d08d.bin",
+    "ROVER": "enc/ROVER.0533d08d.bin",
+    "SAAB": "enc/SAAB.0533d08d.bin",
+    "SUBARU": "enc/SUBARU.0533d08d.bin",
+    "TOYOTA": "enc/TOYOTA.0533d08d.bin",
+    "VAG": "enc/VAG.0533d08d.bin",
+    "VOLVO": "enc/VOLVO.0533d08d.bin"
+  },
+  "build": "2026-09-07T08:39:30.427Z"
+}

@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auto Programming Guide</title>
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Auto Guide">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>
+  :root{
+    --bg:#f5f7fa; --panel:#ffffff; --panel2:#f0f3f7; --line:#e3e8ee;
+    --text:#1b2430; --dim:#67748a; --accent:#2563eb; --accent-soft:#e8f0fe; --accent2:#b45309;
+    --hit:#fde68a; --radius:10px; --shadow:0 1px 2px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  @supports (height:100dvh){ html,body{height:100dvh;} }
+  body{
+    font-family:-apple-system, "Segoe UI", system-ui, Roboto, sans-serif;
+    background:var(--bg); color:var(--text); font-size:15px;
+    display:flex; flex-direction:column; overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+  button{
+    font:inherit; font-size:14px; padding:9px 14px; border-radius:var(--radius);
+    border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; box-shadow:var(--shadow);
+  }
+  button:hover{border-color:#c9d2dd; background:#fbfcfd;}
+  button.primary, #searchBtn, #unlockBtn{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600;}
+  button.primary:hover, #searchBtn:hover, #unlockBtn:hover{background:#1d4fd7; border-color:#1d4fd7;}
+  input{font:inherit; color:var(--text);}
+  input::placeholder{color:#9aa5b5;}
+
+  /* ---------- header ---------- */
+  header{
+    display:flex; align-items:center; gap:14px; padding:10px 18px;
+    background:var(--panel); border-bottom:1px solid var(--line); flex-wrap:wrap;
+  }
+  .logo{display:flex; align-items:center; gap:10px; white-space:nowrap;}
+  .logo .key{
+    width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+    display:flex; align-items:center; justify-content:center; font-size:17px;
+  }
+  .logo h1{font-size:16px; font-weight:650; letter-spacing:-.01em;}
+  .logo small{display:block; color:var(--dim); font-size:11.5px; font-weight:400;}
+  .searchwrap{flex:1; min-width:220px; display:flex; gap:8px;}
+  #q{
+    flex:1; min-width:0; padding:9px 14px; border-radius:var(--radius); border:1px solid var(--line);
+    background:var(--panel2); font-size:15px; outline:none;
+  }
+  #q:focus{border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+  #lockBtn{display:none;}
+  #homeBtn{display:none; white-space:nowrap;}
+
+  /* ---------- layout ---------- */
+  #main{flex:1; display:flex; min-height:0;}
+  nav{
+    width:232px; min-width:232px; background:var(--panel); border-right:1px solid var(--line);
+    overflow-y:auto; padding:12px 10px;
+  }
+  nav .navtitle{font-size:11px; letter-spacing:.08em; color:var(--dim); text-transform:uppercase; padding:6px 10px 8px; font-weight:600;}
+  .gbtn{
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    width:100%; text-align:left; padding:8px 12px; margin:1px 0;
+    background:none; border:1px solid transparent; border-radius:8px; box-shadow:none; font-size:14px;
+  }
+  .gbtn .pg{color:#9aa5b5; font-size:11.5px;}
+  .gbtn:hover{background:var(--panel2); border-color:transparent;}
+  .gbtn.active{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .gbtn.active .pg{color:var(--accent); opacity:.7;}
+  .gbtn.intro{color:var(--accent2);}
+
+  /* ---------- viewer ---------- */
+  #viewer{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--bg);}
+  #viewbar{
+    display:flex; align-items:center; gap:8px; padding:8px 14px;
+    background:var(--panel); border-bottom:1px solid var(--line); font-size:13.5px; color:var(--dim); flex-wrap:wrap;
+  }
+  #viewbar b{color:var(--text); font-weight:650; font-size:14.5px;}
+  #viewbar button{padding:6px 11px; font-size:13.5px;}
+  #pageJump{width:62px; padding:6px 8px; border-radius:8px; border:1px solid var(--line); background:var(--panel2); text-align:center; outline:none;}
+  #pageJump:focus{border-color:var(--accent); background:#fff;}
+  .zoombtn{padding:6px 10px !important; font-size:15px !important; line-height:1;}
+  #frameHost{flex:1; min-height:0;}
+  #frameHost iframe{width:100%; height:100%; border:0; background:#e6eaef;}
+  #pdfHost{flex:1; min-height:0; overflow:auto; position:relative; background:#e6eaef; -webkit-overflow-scrolling:touch; padding:12px 0;}
+  .pdfpage{margin:0 auto 12px; background:#fff; position:relative; box-shadow:0 1px 4px rgba(16,24,40,.18);}
+  .pdfpage canvas{display:block; width:100%; height:100%;}
+  .pdfpage .pnum{position:absolute; right:8px; bottom:6px; font-size:11px; color:#4b5563; background:rgba(255,255,255,.85); padding:1px 6px; border-radius:4px;}
+  .pdfmsg{color:var(--dim); text-align:center; padding:40px 16px;}
+
+  /* ---------- welcome / make grid ---------- */
+  #welcome{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:var(--dim); gap:14px; padding:30px 24px; text-align:center; overflow-y:auto; min-height:0;
+  }
+  #welcome .big{display:none;}
+  #welcome h2{color:var(--text); font-weight:650; font-size:22px; letter-spacing:-.01em;}
+  #welcome .hint{max-width:520px; font-size:14px; line-height:1.5;}
+  #makeGrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:10px; width:100%; max-width:820px; margin-top:6px;}
+  .makebtn{
+    display:flex; flex-direction:column; align-items:flex-start; gap:3px; padding:14px 15px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; text-align:left;
+    font-size:15px; font-weight:600; color:var(--text); line-height:1.25;
+  }
+  .makebtn small{color:var(--dim); font-weight:400; font-size:12.5px;}
+  .makebtn:hover{border-color:var(--accent); box-shadow:0 2px 8px rgba(37,99,235,.12);}
+  .makebtn.intro{color:var(--accent2);}
+  #welcome .colors{font-size:12.5px; max-width:520px; line-height:1.5; margin-top:6px;}
+  #offlineBox{margin-top:4px;}
+  #offlineMsg{font-size:12.5px; margin-top:8px; color:var(--dim);}
+
+  /* ---------- vehicle list ---------- */
+  #modelView{flex:1; overflow-y:auto; padding:24px 28px; display:none;}
+  #modelView h2{font-weight:650; font-size:22px; margin-bottom:3px; letter-spacing:-.01em;}
+  #modelView .sub{color:var(--dim); font-size:13.5px; line-height:1.5;}
+  .mhead{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:16px; max-width:900px;}
+  .mtools{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  #mfilter{padding:9px 12px; border-radius:var(--radius); border:1px solid var(--line); background:var(--panel2); font-size:14px; outline:none; min-width:240px;}
+  #mfilter:focus{border-color:var(--accent); background:#fff;}
+  .missingNote{
+    background:#fff7e6; border:1px solid #f5d9a6; color:#8a5a00;
+    padding:10px 14px; border-radius:var(--radius); font-size:13px; margin-bottom:16px; line-height:1.5; max-width:900px;
+  }
+  .mlist{display:flex; flex-direction:column; gap:18px; max-width:900px;}
+  .makegroup{background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; box-shadow:var(--shadow);}
+  .makehdr{
+    display:flex; justify-content:space-between; align-items:center; padding:10px 16px;
+    background:var(--panel2); font-size:13px; color:var(--text); font-weight:650;
+  }
+  .makehdr .cnt{color:var(--dim); font-weight:400; font-size:12.5px;}
+  .mrow{
+    display:grid; grid-template-columns:1fr auto; align-items:center; gap:4px 14px;
+    width:100%; text-align:left; padding:12px 16px; margin:0;
+    background:none; border:0; border-top:1px solid var(--line); border-radius:0; box-shadow:none; font-size:14px; font-family:inherit;
+  }
+  .makehdr + .mrow{border-top:0;}
+  .mrow:hover{background:#f7f9fc;}
+  .mrow:focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
+  .mrow.dis{opacity:.5; cursor:default;} .mrow.dis:hover{background:none;}
+  .mrow-main{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .mrow .mn{font-weight:600; font-size:15.5px;}
+  .mrow .yr{color:var(--dim); font-size:13.5px; white-space:nowrap;}
+  .mrow-tools{grid-column:1; color:var(--dim); font-size:13px; display:flex; gap:6px; flex-wrap:wrap;}
+  .chip{display:inline;}
+  .chip i{font-style:normal; color:#9aa5b5; margin-right:4px;}
+  .chip + .chip::before{content:"\00b7"; margin-right:6px; color:#c3cad4;}
+  .pgbadge{grid-column:2; grid-row:1 / span 2; color:var(--accent); font-weight:600; font-size:13.5px; white-space:nowrap; justify-self:end;}
+  .pgbadge.dim{color:#9aa5b5; font-weight:400;}
+  .mlegend{color:var(--dim); font-size:12.5px; margin:14px 0 0; max-width:900px; line-height:1.5;}
+
+  /* ---------- search results ---------- */
+  #results{
+    width:400px; min-width:300px; max-width:45%; background:var(--panel);
+    border-left:1px solid var(--line); overflow-y:auto; display:none; flex-direction:column;
+  }
+  #results.open{display:flex;}
+  #rhead{
+    position:sticky; top:0; background:var(--panel); padding:12px 14px; z-index:1;
+    border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  #rhead span{font-size:13px; color:var(--dim);}
+  #rhead button{padding:6px 10px; font-size:13px;}
+  #rlist{padding:8px 10px 16px;}
+  .rgroup{font-size:12px; letter-spacing:.06em; color:var(--dim); text-transform:uppercase; font-weight:600; padding:12px 6px 6px;}
+  .rcard{
+    display:block; width:100%; text-align:left; padding:10px 12px; margin:4px 0;
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:none;
+    font-size:13px; line-height:1.5; cursor:pointer; color:var(--text);
+  }
+  .rcard:hover{border-color:var(--accent); background:#fbfcff;}
+  .rcard .where{color:var(--accent); font-weight:600; font-size:12.5px; display:block; margin-bottom:2px;}
+  .rcard mark{background:var(--hit); color:inherit; border-radius:3px; padding:0 2px;}
+  .noRes{padding:16px; color:var(--dim); font-size:13px; line-height:1.5;}
+
+  /* ---------- lock screen ---------- */
+  #lock{position:fixed; inset:0; background:var(--bg); z-index:100; display:none; align-items:center; justify-content:center; padding:20px;}
+  .lockbox{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:28px; max-width:400px; width:100%; display:flex; flex-direction:column; gap:14px; box-shadow:0 8px 30px rgba(16,24,40,.08);}
+  .lockbox p{color:var(--dim); font-size:14px; line-height:1.5;}
+  .lockrow{display:flex; gap:8px;}
+  .lockrow input{flex:1; min-width:0; padding:10px 12px; border-radius:var(--radius); border:1px solid var(--line); background:var(--panel2); font-size:16px; outline:none;}
+  .lockrow input:focus{border-color:var(--accent); background:#fff;}
+  #unlockBtn{padding:11px;}
+  #lockMsg{font-size:13px; color:var(--accent2); min-height:18px;}
+
+  ::-webkit-scrollbar{width:10px; height:10px;} ::-webkit-scrollbar-thumb{background:#cfd6df; border-radius:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  /* ---------- phones & small tablets ---------- */
+  @media (max-width:760px){
+    header{padding:8px 12px; gap:8px;}
+    .logo small{display:none;}
+    .logo h1{font-size:15px;}
+    .logo .key{width:28px; height:28px; font-size:14px;}
+    .searchwrap{flex-basis:100%;}
+    #q{padding:8px 12px;}
+    #main{flex-direction:column;}
+    nav{display:none;}
+    #homeBtn{display:inline-flex; align-items:center; gap:6px; margin-left:auto; padding:7px 12px; font-weight:600;}
+    #welcome{justify-content:flex-start; padding:18px 14px 24px; gap:10px;}
+    #welcome h2{font-size:18px;}
+    #welcome .hint{font-size:13.5px;}
+    #makeGrid{grid-template-columns:1fr 1fr;}
+    #results{position:fixed; left:0; right:0; top:0; bottom:0; width:auto; max-width:none; z-index:30; border-left:0;}
+    #modelView{padding:16px 12px 24px;}
+    .mhead{flex-direction:column; align-items:stretch; gap:10px;}
+    #mfilter{flex:1 1 100%; min-width:0; order:1;}
+    .mrow{padding:12px;}
+    #viewbar{padding:6px 8px; gap:6px; font-size:12.5px;}
+    #viewbar #curPages{display:none;}
+    #viewbar #pageJump{width:54px;}
+    #viewbar #goBtn, #viewbar > span:not(#zoomCtl){display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="key">&#128273;</div>
+    <div>
+      <h1>Auto Programming Guide</h1>
+      <small>Advanced Automotive Immobilizer Programming &mdash; 2016 Edition</small>
+    </div>
+  </div>
+  <button id="homeBtn" title="All vehicle makes">&#128663; Makes</button>
+  <div class="searchwrap">
+    <input id="q" type="search" placeholder="Search all guides&hellip; e.g. EWS4, 93C56, Motorola, smart box, cluster" autocomplete="off">
+    <button id="searchBtn">Search</button>
+    <button id="lockBtn" title="Forget the passphrase on this device">&#128274;</button>
+  </div>
+</header>
+
+<div id="lock">
+  <div class="lockbox">
+    <div class="logo">
+      <div class="key">&#128273;</div>
+      <div>
+        <h1>Auto Programming Guide</h1>
+        <small>Advanced Automotive Immobilizer Programming</small>
+      </div>
+    </div>
+    <p>This copy is private. Enter the passphrase once to unlock the guides on this device.</p>
+    <div class="lockrow">
+      <input id="pass" type="password" placeholder="Passphrase" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">
+      <button id="showPass" type="button">Show</button>
+    </div>
+    <button id="unlockBtn">Unlock</button>
+    <div id="lockMsg"></div>
+  </div>
+</div>
+
+<div id="main">
+  <nav id="nav">
+    <div class="navtitle">Vehicle Guides</div>
+  </nav>
+
+  <div id="viewer">
+    <div id="viewbar" style="display:none">
+      <b id="curTitle"></b>
+      <span id="curPages"></span>
+      <button id="modelsBtn" style="margin-left:6px">&#8592; Vehicle list</button>
+      <span style="margin-left:auto">Page</span>
+      <button id="prevPg" class="zoombtn" title="Previous page">&#9650;</button>
+      <input id="pageJump" type="number" min="1" value="1">
+      <button id="nextPg" class="zoombtn" title="Next page">&#9660;</button>
+      <button id="goBtn">Go</button>
+      <span id="zoomCtl" style="display:none; margin-left:4px">
+        <button id="zoomOut" class="zoombtn" title="Zoom out">&minus;</button>
+        <button id="zoomIn" class="zoombtn" title="Zoom in">+</button>
+      </span>
+    </div>
+    <div id="modelView"></div>
+    <div id="welcome">
+      <div class="big" style="font-size:44px">&#128663;&#128273;</div>
+      <h2>Pick a vehicle make</h2>
+      <p class="hint">Or search all 308 pages above for a part number, chip, tool or procedure.</p>
+      <div id="makeGrid"></div>
+      <p class="colors">Difficulty colors in the book: <b style="color:#2563eb">blue</b> easiest, <b style="color:#b45309">yellow/orange</b> medium, <b style="color:#dc2626">red</b> hardest. Left = removal, right = reading.</p>
+      <div id="offlineBox" style="display:none">
+        <button id="offlineBtn">&#11015; Save all guides on this device for offline use</button>
+        <div id="offlineMsg"></div>
+      </div>
+    </div>
+    <div id="frameHost" style="display:none"></div>
+    <div id="pdfHost" style="display:none"></div>
+  </div>
+
+  <div id="results">
+    <div id="rhead">
+      <span id="rcount"></span>
+      <button id="closeRes">Close &#10005;</button>
+    </div>
+    <div id="rlist"></div>
+  </div>
+</div>
+
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script src="data.js"></script>
+<script src="models.js"></script>
+<script>
+function APG_MAIN(){
+  var enc = window.APG_ENC || null;   // set by the boot code in the encrypted web version
+  function guideUrl(g){ return enc ? enc.url(g) : 'guides/' + g.file; }
+  if (enc){
+    var lockBtn = document.getElementById('lockBtn');
+    lockBtn.style.display = '';
+    lockBtn.onclick = function(){ if (confirm('Forget the passphrase on this device? You will need to type it again.')) enc.lock(); };
+  }
+  var nav = document.getElementById('nav');
+  var frameHost = document.getElementById('frameHost');
+  var welcome = document.getElementById('welcome');
+  var viewbar = document.getElementById('viewbar');
+  var curTitle = document.getElementById('curTitle');
+  var curPages = document.getElementById('curPages');
+  var pageJump = document.getElementById('pageJump');
+  var results = document.getElementById('results');
+  var rlist = document.getElementById('rlist');
+  var rcount = document.getElementById('rcount');
+  var q = document.getElementById('q');
+  var current = null;
+  var pdfHost = document.getElementById('pdfHost');
+  var zoomCtl = document.getElementById('zoomCtl');
+  // Use the browser's own PDF viewer where one exists (desktop / the exe); phones get the in-page renderer.
+  var touchDevice = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
+  var mobileUA = /Android|iPhone|iPad|iPod|Mobile|Tablet|Silk/i.test(navigator.userAgent) ||
+                 (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);   // iPadOS "desktop" mode
+  var useNative = !!navigator.pdfViewerEnabled && !mobileUA && !(touchDevice && window.innerWidth < 1100);
+  if (!window.pdfjsLib) useNative = true;
+
+  var modelView = document.getElementById('modelView');
+  var byId = {};
+  GUIDES.forEach(function(g){ byId[g.id] = g; });
+
+  // chapters referenced by the book that are not loaded yet
+  var MISSING = {};
+
+  function pdfPage(m){ return m.bp + (CH_OFFSET[m.ch] || 0); }
+
+  // ---- sidebar ----
+  GUIDES.forEach(function(g){
+    var b = document.createElement('button');
+    b.className = 'gbtn' + (g.id === 'INTRODUCTION' ? ' intro' : '');
+    b.innerHTML = '<span>' + g.label + '</span><span class="pg">' + g.pages + ' pg</span>';
+    b.id = 'nav-' + g.id;
+    b.onclick = function(){ showChapter(g.id); };
+    nav.appendChild(b);
+  });
+  var makeGrid = document.getElementById('makeGrid');
+  GUIDES.forEach(function(g){
+    var b = document.createElement('button');
+    b.className = 'makebtn' + (g.id === 'INTRODUCTION' ? ' intro' : '');
+    var n = MODELS.filter(function(m){ return m.ch === g.id; }).length;
+    b.innerHTML = '<span>' + g.label + '</span><small>' + (g.id === 'INTRODUCTION' ? g.pages + ' pages' : n + (n === 1 ? ' vehicle' : ' vehicles') + ' &middot; ' + g.pages + ' pages') + '</small>';
+    b.onclick = function(){ showChapter(g.id); };
+    makeGrid.appendChild(b);
+  });
+  function showHome(){
+    modelView.style.display = 'none';
+    frameHost.style.display = 'none';
+    pdfHost.style.display = 'none';
+    viewbar.style.display = 'none';
+    results.classList.remove('open');
+    welcome.style.display = 'flex';
+    document.querySelectorAll('.gbtn').forEach(function(el){ el.classList.remove('active'); });
+    welcome.scrollTop = 0;
+  }
+  document.getElementById('homeBtn').onclick = showHome;
+  Object.keys(MISSING).forEach(function(id){
+    var b = document.createElement('button');
+    b.className = 'gbtn';
+    b.style.opacity = '.5';
+    b.innerHTML = '<span>' + MISSING[id] + '</span><span class="pg">no PDF</span>';
+    b.id = 'nav-' + id;
+    b.onclick = function(){ showModels(id); };
+    nav.appendChild(b);
+  });
+
+  function showChapter(id){
+    if (id === 'INTRODUCTION'){ openGuide(id, 1); return; }
+    showModels(id);
+  }
+
+  // ---- model list view ----
+  function years(y){ return String(y).replace('-', '\u2013'); }
+  function showModels(chId){
+    var g = byId[chId];
+    var label = g ? g.label : MISSING[chId];
+    var list = MODELS.filter(function(m){ return m.ch === chId; });
+    welcome.style.display = 'none';
+    frameHost.style.display = 'none';
+    pdfHost.style.display = 'none';
+    viewbar.style.display = 'none';
+    results.classList.remove('open');
+    modelView.style.display = 'block';
+    document.querySelectorAll('.gbtn').forEach(function(el){ el.classList.remove('active'); });
+    var nb = document.getElementById('nav-' + chId);
+    if (nb) nb.classList.add('active');
+
+    var h = '<div class="mhead"><div><h2>' + esc(label) + '</h2>' +
+      '<div class="sub">' + list.length + ' vehicle' + (list.length === 1 ? '' : 's') + '. Tap one to open its page.</div></div>' +
+      '<div class="mtools">' +
+      '<button onclick="APG.home()">&#8592; All makes</button>' +
+      '<input id="mfilter" type="search" placeholder="Filter by model, year or tool\u2026" autocomplete="off">' +
+      (g ? '<button class="primary" onclick="APG.openGuide(\'' + chId + '\',1)">Open full chapter</button>' : '') +
+      '</div></div>';
+    if (!g){
+      h += '<div class="missingNote">This chapter\u2019s PDF (' + esc(chId) + '.pdf) isn\u2019t loaded yet \u2014 these vehicles are listed in the book\u2019s index but the pages aren\u2019t here.</div>';
+    }
+    // group by make, sort models naturally
+    var makes = [], byMake = {};
+    list.forEach(function(m){
+      if (!byMake[m.make]){ byMake[m.make] = []; makes.push(m.make); }
+      byMake[m.make].push(m);
+    });
+    makes.sort();
+    h += '<div class="mlist">';
+    makes.forEach(function(mk){
+      var rows = byMake[mk].slice().sort(function(a, b){
+        return a.model.localeCompare(b.model, undefined, {numeric:true}) || a.years.localeCompare(b.years, undefined, {numeric:true});
+      });
+      h += '<section class="makegroup"><div class="makehdr"><span>' + esc(mk) + '</span><span class="cnt">' + rows.length + '</span></div>';
+      rows.forEach(function(m){
+        var i = MODELS.indexOf(m);
+        var key = esc((m.make + ' ' + m.model + ' ' + m.years + ' ' + m.rw + ' ' + m.conv).toLowerCase());
+        var tag = g ? 'button' : 'div';
+        h += '<' + tag + ' class="mrow' + (g ? '' : ' dis') + '" data-key="' + key + '"' + (g ? ' type="button" onclick="APG.openModel(' + i + ')"' : '') + '>' +
+          '<div class="mrow-main"><span class="mn">' + esc(m.model) + '</span><span class="yr">' + esc(years(m.years)) + '</span></div>' +
+          '<div class="mrow-tools"><span class="chip"><i>Reader</i>' + esc(m.rw) + '</span><span class="chip"><i>Programmer</i>' + esc(m.conv) + '</span></div>' +
+          (g ? '<span class="pgbadge">Page ' + m.bp + ' &rsaquo;</span>' : '<span class="pgbadge dim">no PDF</span>') +
+          '</' + tag + '>';
+      });
+      h += '</section>';
+    });
+    h += '</div>';
+    h += '<div id="mnone" class="noRes" style="display:none">No vehicles match that filter.</div>';
+    h += '<p class="mlegend">Reader = device that reads/writes the immobilizer module. Programmer = tool that programs the key. Page numbers as printed in the book.</p>';
+    modelView.innerHTML = h;
+    modelView.scrollTop = 0;
+
+    var mf = document.getElementById('mfilter');
+    mf.addEventListener('input', function(){
+      var words = mf.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      var shown = 0;
+      modelView.querySelectorAll('.makegroup').forEach(function(sec){
+        var n = 0;
+        sec.querySelectorAll('.mrow').forEach(function(r){
+          var k = r.getAttribute('data-key');
+          var ok = words.every(function(w){ return k.indexOf(w) !== -1; });
+          r.style.display = ok ? '' : 'none';
+          if (ok) n++;
+        });
+        sec.style.display = n ? '' : 'none';
+        sec.querySelector('.cnt').textContent = n;
+        shown += n;
+      });
+      document.getElementById('mnone').style.display = shown ? 'none' : '';
+    });
+  }
+
+  // ---- open a guide at a page ----
+  function openGuide(id, page){
+    var g = byId[id];
+    if (!g) return;
+    current = g;
+    page = Math.max(1, Math.min(g.pages, page || 1));
+    welcome.style.display = 'none';
+    modelView.style.display = 'none';
+    frameHost.style.display = useNative ? 'block' : 'none';
+    pdfHost.style.display = useNative ? 'none' : 'block';
+    zoomCtl.style.display = useNative ? 'none' : '';
+    viewbar.style.display = 'flex';
+    if (window.innerWidth <= 760) results.classList.remove('open');
+    document.getElementById('modelsBtn').style.display = (id === 'INTRODUCTION') ? 'none' : '';
+    curTitle.textContent = g.label;
+    curPages.textContent = '(' + g.pages + ' pages)';
+    pageJump.value = page;
+    pageJump.max = g.pages;
+    if (useNative){
+      // recreate the iframe each time — the only reliable way to make the
+      // built-in PDF viewer jump to a page
+      frameHost.innerHTML = '';
+      var f = document.createElement('iframe');
+      frameHost.appendChild(f);
+      if (enc){
+        enc.blobUrl(g).then(function(u){ if (current === g) f.src = u + '#page=' + page + '&t=' + Date.now(); })
+          .catch(function(err){ alert('Could not open this guide: ' + (err && err.message || err)); });
+      } else {
+        f.src = 'guides/' + g.file + '#page=' + page + '&t=' + Date.now();
+      }
+    } else {
+      pdfShow(g, page);
+    }
+    document.querySelectorAll('.gbtn').forEach(function(el){ el.classList.remove('active'); });
+    var nb = document.getElementById('nav-' + id);
+    if (nb) nb.classList.add('active');
+    try { localStorage.setItem('apg-last', JSON.stringify({id:id, page:page})); } catch(e){}
+  }
+
+  document.getElementById('goBtn').onclick = function(){
+    if (current) openGuide(current.id, parseInt(pageJump.value, 10) || 1);
+  };
+  function stepPage(d){
+    if (!current) return;
+    var n = (parseInt(pageJump.value, 10) || 1) + d;
+    if (n < 1 || n > current.pages) return;
+    openGuide(current.id, n);
+  }
+  document.getElementById('prevPg').onclick = function(){ stepPage(-1); };
+  document.getElementById('nextPg').onclick = function(){ stepPage(1); };
+  document.getElementById('modelsBtn').onclick = function(){
+    if (current) showModels(current.id);
+  };
+  // expose for inline onclick handlers in the model cards
+  window.APG = {
+    openGuide: openGuide,
+    home: showHome,
+    openModel: function(i){
+      var m = MODELS[i];
+      if (m && byId[m.ch]) openGuide(m.ch, pdfPage(m));
+    }
+  };
+  pageJump.addEventListener('change', function(){ if (current) openGuide(current.id, parseInt(pageJump.value, 10) || 1); });
+  pageJump.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && current) openGuide(current.id, parseInt(pageJump.value, 10) || 1);
+  });
+
+  // ---- search ----
+  function esc(s){ return s.replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  // make-name words act as filters, not text terms
+  var ALIAS = {
+    'introduction':'INTRODUCTION','intro':'INTRODUCTION','index':'INTRODUCTION',
+    'bmw':'BMW',
+    'chrysler':'CHRYSLER','dodge':'CHRYSLER','jeep':'CHRYSLER','mopar':'CHRYSLER',
+    'gm':'GM','chevy':'GM','chevrolet':'GM','gmc':'GM','cadillac':'GM','buick':'GM','pontiac':'GM',
+    'honda':'HONDA','acura':'HONDA',
+    'isuzu':'ISUZU',
+    'jaguar':'JAGUAR','jag':'JAGUAR',
+    'mazda':'MAZDA',
+    'mercedes':'MERCEDES-BENZ','benz':'MERCEDES-BENZ','mb':'MERCEDES-BENZ',
+    'nissan':'NISSAN','infiniti':'NISSAN',
+    'porsche':'PORSCHE',
+    'rover':'ROVER','landrover':'ROVER',
+    'saab':'SAAB',
+    'subaru':'SUBARU',
+    'toyota':'TOYOTA','lexus':'TOYOTA','scion':'TOYOTA',
+    'vag':'VAG','audi':'VAG','vw':'VAG','volkswagen':'VAG','bentley':'VAG',
+    'volvo':'VOLVO'
+  };
+
+  function doSearch(){
+    var raw = q.value.trim();
+    if (!raw) return;
+    var allTerms = raw.toLowerCase().split(/\s+/).filter(function(t){ return t.length > 0; });
+    var filterIds = {};
+    var hasFilter = false;
+    var terms = [];
+    allTerms.forEach(function(t){
+      if (ALIAS[t]){ filterIds[ALIAS[t]] = true; hasFilter = true; }
+      else terms.push(t);
+    });
+    // "toyota" alone: show that chapter's vehicle list
+    if (hasFilter && terms.length === 0){
+      var only = Object.keys(filterIds);
+      if (only.length === 1){ results.classList.remove('open'); showModels(only[0]); return; }
+    }
+    function collect(requireAll){
+      var out = [];
+      PAGES.forEach(function(pg){
+        if (hasFilter && !filterIds[pg.g]) return;
+        var low = pg.t.toLowerCase();
+        var matched = 0, score = 0, firstPos = -1;
+        for (var i = 0; i < terms.length; i++){
+          var pos = low.indexOf(terms[i]);
+          if (pos === -1) continue;
+          matched++; score += 1;
+          var c = 0, p2 = pos;
+          while (p2 !== -1 && c < 10){ c++; p2 = low.indexOf(terms[i], p2 + 1); }
+          score += c * 0.2;
+          if (firstPos === -1 || pos < firstPos) firstPos = pos;
+        }
+        if (requireAll ? matched === terms.length : matched > 0)
+          out.push({pg: pg, score: score + matched * 5, pos: firstPos});
+      });
+      out.sort(function(a,b){ return b.score - a.score; });
+      return out;
+    }
+    var partial = false;
+    var hits = collect(true);
+    if (!hits.length && terms.length > 1){ hits = collect(false); partial = true; }
+
+    // vehicle-index matches (from the book's table of contents)
+    var vMatches = [];
+    MODELS.forEach(function(m, i){
+      var s = (m.make + ' ' + m.model + ' ' + m.years).toLowerCase();
+      var all = allTerms.every(function(t){ return s.indexOf(t) !== -1; });
+      if (all) vMatches.push(i);
+    });
+
+    rlist.innerHTML = '';
+    rcount.textContent = (vMatches.length ? vMatches.length + ' vehicle' + (vMatches.length === 1 ? '' : 's') + ' + ' : '') +
+      hits.length + ' page' + (hits.length === 1 ? '' : 's') + ' match ' +
+      (partial ? 'some of ' : '') + '“' + raw + '”';
+    results.classList.add('open');
+
+    if (vMatches.length){
+      var vh = document.createElement('div');
+      vh.className = 'rgroup';
+      vh.textContent = 'Vehicles (from the book index)';
+      rlist.appendChild(vh);
+      vMatches.slice(0, 30).forEach(function(i){
+        var m = MODELS[i];
+        var have = !!byId[m.ch];
+        var card = document.createElement('button');
+        card.className = 'rcard';
+        card.innerHTML = '<span class="where">' + esc(m.make + ' ' + m.model) + ' — ' + esc(m.years) + '</span>' +
+          'R/W: ' + esc(m.rw) + ' · ' + esc(m.conv) +
+          (have ? ' → page ' + m.bp : ' <i>(chapter PDF not loaded)</i>');
+        if (have) card.onclick = function(){ openGuide(m.ch, pdfPage(m)); };
+        else card.style.opacity = '.5';
+        rlist.appendChild(card);
+      });
+    }
+
+    if (!hits.length){
+      if (!vMatches.length)
+        rlist.innerHTML = '<div class="noRes">No pages matched. The guides are scanned, so the hidden text can have OCR quirks &mdash; try a shorter or slightly different spelling (e.g. “93C” instead of “93C56”, “EWS” instead of “EWS4.3”).</div>';
+      return;
+    }
+
+    // group by guide, keep guide order
+    var groups = {};
+    hits.forEach(function(h){
+      (groups[h.pg.g] = groups[h.pg.g] || []).push(h);
+    });
+    GUIDES.forEach(function(g){
+      var list = groups[g.id];
+      if (!list) return;
+      var gh = document.createElement('div');
+      gh.className = 'rgroup';
+      gh.textContent = g.label;
+      rlist.appendChild(gh);
+      list.forEach(function(h){
+        var text = h.pg.t;
+        var start = Math.max(0, h.pos - 60);
+        var snip = (start > 0 ? '…' : '') + text.substr(start, 190) + (start + 190 < text.length ? '…' : '');
+        var safe = esc(snip);
+        terms.forEach(function(t){
+          safe = safe.replace(new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>');
+        });
+        var card = document.createElement('button');
+        card.className = 'rcard';
+        card.innerHTML = '<span class="where">' + g.label + ' — page ' + h.pg.p + '</span>' + safe;
+        card.onclick = function(){ openGuide(g.id, h.pg.p); };
+        rlist.appendChild(card);
+      });
+    });
+  }
+
+  document.getElementById('searchBtn').onclick = doSearch;
+  q.addEventListener('keydown', function(e){ if (e.key === 'Enter') doSearch(); });
+  document.getElementById('closeRes').onclick = function(){ results.classList.remove('open'); };
+
+  // ---- in-page PDF renderer (pdf.js) ----
+  var pdfState = {id:null, doc:null, pages:[], zoom:1, key:0, cssW:0};
+  if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
+
+  function pdfShow(g, page){
+    if (pdfState.id === g.id && pdfState.doc){ pdfScrollTo(page); return; }
+    var myId = g.id;
+    pdfState.id = myId; pdfState.doc = null; pdfState.pages = [];
+    pdfHost.innerHTML = '<div class="pdfmsg">Loading ' + esc(g.label) + '&hellip;</div>';
+    var src = enc
+      ? enc.load(g).then(function(buf){ return {data: new Uint8Array(buf.slice(0))}; })
+      : Promise.resolve({url: 'guides/' + g.file, disableRange: true});
+    src.then(function(opts){ return pdfjsLib.getDocument(opts).promise; }).then(function(doc){
+      if (pdfState.id !== myId) return;
+      pdfState.doc = doc;
+      pdfHost.innerHTML = '';
+      var frag = document.createDocumentFragment();
+      var dims = [];
+      for (var i = 1; i <= doc.numPages; i++){
+        (function(n){
+          var el = document.createElement('div');
+          el.className = 'pdfpage';
+          el.innerHTML = '<span class="pnum">' + n + '</span>';
+          frag.appendChild(el);
+          var rec = {n:n, el:el, w:612, h:792, pg:null, key:0, task:null};
+          pdfState.pages.push(rec);
+          dims.push(doc.getPage(n).then(function(pg){
+            var vp = pg.getViewport({scale:1});
+            rec.w = vp.width; rec.h = vp.height; rec.pg = pg;
+          }));
+        })(i);
+      }
+      pdfHost.appendChild(frag);
+      pdfLayout();
+      Promise.all(dims).then(function(){
+        if (pdfState.id !== myId) return;
+        pdfLayout();
+        pdfScrollTo(page);
+        pdfRenderVisible();
+      });
+    }).catch(function(err){
+      if (pdfState.id !== myId) return;
+      pdfHost.innerHTML = '<div class="pdfmsg">Could not load this PDF.<br>' + esc(String(err && err.message || err)) + '</div>';
+    });
+  }
+
+  function pdfLayout(){
+    var cssW = Math.max(200, Math.floor((pdfHost.clientWidth - 16) * pdfState.zoom));
+    if (cssW !== pdfState.cssW){ pdfState.cssW = cssW; pdfState.key++; }
+    pdfState.pages.forEach(function(p){
+      p.el.style.width = cssW + 'px';
+      p.el.style.height = Math.round(cssW * p.h / p.w) + 'px';
+    });
+  }
+
+  function pdfScrollTo(n){
+    var p = pdfState.pages[n - 1];
+    if (p) pdfHost.scrollTop = p.el.offsetTop - 8;
+    pageJump.value = n;
+  }
+
+  function pdfRenderVisible(){
+    if (!pdfState.doc) return;
+    var top = pdfHost.scrollTop, bottom = top + pdfHost.clientHeight;
+    var nearest = null, nearestDist = Infinity;
+    pdfState.pages.forEach(function(p){
+      var pt = p.el.offsetTop, pb = pt + p.el.offsetHeight;
+      var d = Math.abs(pt - top);
+      if (d < nearestDist){ nearestDist = d; nearest = p; }
+      var vh = pdfHost.clientHeight || 800;
+      var near = pb > top - vh && pt < bottom + vh;
+      var far = pb < top - vh * 2.5 || pt > bottom + vh * 2.5;
+      if (near) pdfRenderPage(p);
+      else if (far && p.key){
+        var c = p.el.querySelector('canvas');
+        if (c) c.remove();
+        p.key = 0;
+      }
+    });
+    if (nearest && document.activeElement !== pageJump) pageJump.value = nearest.n;
+  }
+
+  function pdfRenderPage(p){
+    if (!p.pg || p.key === pdfState.key) return;
+    if (p.task){ try { p.task.cancel(); } catch(e){} p.task = null; }
+    var key = pdfState.key;
+    p.key = key;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var cssW = pdfState.cssW;
+    var scale = cssW * dpr / p.w;
+    // keep canvases under ~8M pixels (memory on phones, iOS canvas limit)
+    if ((cssW * dpr) * (cssW * dpr * p.h / p.w) > 8000000) scale = Math.sqrt(8000000 / (p.w * p.h));
+    var vp = p.pg.getViewport({scale:scale});
+    var canvas = document.createElement('canvas');
+    canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
+    var task = p.pg.render({canvasContext:canvas.getContext('2d'), viewport:vp});
+    p.task = task;
+    task.promise.then(function(){
+      p.task = null;
+      if (p.key !== key || pdfState.cssW !== cssW) return;
+      var old = p.el.querySelector('canvas');
+      if (old) old.remove();
+      p.el.insertBefore(canvas, p.el.firstChild);
+    }).catch(function(){ p.task = null; if (p.key === key) p.key = 0; });
+  }
+
+  var scrollTick = false;
+  pdfHost.addEventListener('scroll', function(){
+    if (scrollTick) return;
+    scrollTick = true;
+    requestAnimationFrame(function(){ scrollTick = false; pdfRenderVisible(); });
+  });
+  var resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){
+      if (!pdfState.doc || useNative) return;
+      var cur = parseInt(pageJump.value, 10) || 1;
+      pdfLayout(); pdfScrollTo(cur); pdfRenderVisible();
+    }, 150);
+  });
+  function pdfZoom(mult){
+    if (!pdfState.doc) return;
+    var cur = parseInt(pageJump.value, 10) || 1;
+    pdfState.zoom = Math.min(4, Math.max(0.5, pdfState.zoom * mult));
+    pdfLayout(); pdfScrollTo(cur); pdfRenderVisible();
+  }
+  document.getElementById('zoomIn').onclick = function(){ pdfZoom(1.25); };
+  document.getElementById('zoomOut').onclick = function(){ pdfZoom(0.8); };
+
+  // ---- offline support (web app only) ----
+  if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+    var offlineBox = document.getElementById('offlineBox');
+    var offlineBtn = document.getElementById('offlineBtn');
+    var offlineMsg = document.getElementById('offlineMsg');
+    offlineBox.style.display = '';
+    var offlineStatus = function(){
+      if (!window.caches) return;
+      caches.open('apg-guides').then(function(c){
+        return Promise.all(GUIDES.map(function(g){ return c.match(guideUrl(g)); }));
+      }).then(function(res){
+        var have = res.filter(Boolean).length;
+        if (have === GUIDES.length){ offlineBtn.style.display = 'none'; offlineMsg.textContent = 'All ' + GUIDES.length + ' guides are saved on this device. Works without signal.'; }
+        else if (have) offlineMsg.textContent = have + ' of ' + GUIDES.length + ' guides saved so far.';
+      }).catch(function(){});
+    };
+    offlineStatus();
+    offlineBtn.onclick = function(){
+      offlineBtn.disabled = true;
+      caches.open('apg-guides').then(function(c){
+        var done = 0;
+        var chain = Promise.resolve();
+        GUIDES.forEach(function(g){
+          chain = chain.then(function(){
+            offlineMsg.textContent = 'Saving ' + g.label + '\u2026 (' + (done + 1) + ' of ' + GUIDES.length + ')';
+            return c.match(guideUrl(g)).then(function(hit){
+              return hit ? null : c.add(guideUrl(g));
+            }).then(function(){ done++; });
+          });
+        });
+        return chain;
+      }).then(function(){ offlineStatus(); })
+        .catch(function(err){ offlineBtn.disabled = false; offlineMsg.textContent = 'Could not save everything (' + (err && err.message || err) + '). Check your connection and try again.'; });
+    };
+  }
+
+  // ---- restore last guide ----
+  try {
+    var last = JSON.parse(localStorage.getItem('apg-last') || 'null');
+    if (last && byId[last.id]) openGuide(last.id, last.page);
+  } catch(e){}
+}
+
+// ---- boot: plain data files present (desktop app) -> start; otherwise unlock the encrypted web copy ----
+(function boot(){
+  if (typeof GUIDES !== 'undefined' && typeof MODELS !== 'undefined'){ APG_MAIN(); return; }
+  var lock = document.getElementById('lock');
+  var passIn = document.getElementById('pass');
+  var unlockBtn = document.getElementById('unlockBtn');
+  var lockMsg = document.getElementById('lockMsg');
+  lock.style.display = 'flex';
+  var subtle = window.crypto && window.crypto.subtle;
+  if (!subtle){ lockMsg.textContent = 'This browser cannot decrypt the guides. Open the site over https in a current browser.'; unlockBtn.disabled = true; return; }
+
+  var meta = null;
+  function b64(str){ var bin = atob(str); var u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+  function toB64(u){ var str = ''; for (var i = 0; i < u.length; i++) str += String.fromCharCode(u[i]); return btoa(str); }
+  function getMeta(){
+    if (meta) return Promise.resolve(meta);
+    return fetch('enc.json?v=' + Date.now(), {cache: 'no-store'}).then(function(r){ if (!r.ok) throw new Error('enc.json not found'); return r.json(); })
+      .then(function(m){ meta = m; return m; });
+  }
+  function decrypt(key, buf){ var u = new Uint8Array(buf); return subtle.decrypt({name: 'AES-GCM', iv: u.subarray(0, 12)}, key, u.subarray(12)); }
+  function importRaw(raw){ return subtle.importKey('raw', raw, {name: 'AES-GCM'}, false, ['decrypt']); }
+  function deriveBits(pass, m){
+    return subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']).then(function(k){
+      return subtle.deriveBits({name: 'PBKDF2', hash: 'SHA-256', salt: b64(m.salt), iterations: m.iter}, k, 256);
+    });
+  }
+
+  function start(key, m){
+    // a re-encrypted site invalidates anything saved offline under the old key
+    try {
+      if (localStorage.getItem('apg-build') !== m.build){
+        if (window.caches) caches.delete('apg-guides');
+        localStorage.setItem('apg-build', m.build);
+      }
+    } catch(e){}
+    var cache = {}, order = [], blobs = {};
+    window.APG_ENC = {
+      url: function(g){ return m.files[g.id]; },
+      load: function(g){
+        if (cache[g.id]) return Promise.resolve(cache[g.id]);
+        return fetch(m.files[g.id]).then(function(r){ if (!r.ok) throw new Error('download failed (' + r.status + ')'); return r.arrayBuffer(); })
+          .then(function(buf){ return decrypt(key, buf); })
+          .then(function(plain){
+            cache[g.id] = plain; order.push(g.id);
+            while (order.length > 4) delete cache[order.shift()];
+            return plain;
+          });
+      },
+      blobUrl: function(g){
+        if (blobs[g.id]) return Promise.resolve(blobs[g.id]);
+        return this.load(g).then(function(plain){
+          var u = URL.createObjectURL(new Blob([plain], {type: 'application/pdf'}));
+          blobs[g.id] = u; return u;
+        });
+      },
+      lock: function(){ try { localStorage.removeItem('apg-key'); } catch(e){} location.reload(); }
+    };
+    lockMsg.textContent = 'Loading index\u2026';
+    return fetch(m.index).then(function(r){ if (!r.ok) throw new Error('index download failed'); return r.arrayBuffer(); })
+      .then(function(buf){ return decrypt(key, buf).catch(function(){ throw new Error('the site is still updating, please try again in a few minutes'); }); })
+      .then(function(plain){
+        var d = JSON.parse(new TextDecoder().decode(plain));
+        window.GUIDES = d.guides; window.PAGES = d.pages; window.MODELS = d.models; window.CH_OFFSET = d.chOffset || {};
+        lock.style.display = 'none';
+        APG_MAIN();
+      });
+  }
+
+  function tryKey(rawBits, m, remember){
+    return importRaw(rawBits).then(function(key){
+      return decrypt(key, b64(m.check)).then(function(){
+        if (remember) try { localStorage.setItem('apg-key', toB64(new Uint8Array(rawBits))); } catch(e){}
+        return start(key, m);
+      });
+    });
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem('apg-key'); } catch(e){}
+  if (saved){
+    lockMsg.textContent = 'Unlocking\u2026';
+    getMeta().then(function(m){ return tryKey(b64(saved).buffer, m, false); })
+      .catch(function(){ lockMsg.textContent = ''; try { localStorage.removeItem('apg-key'); } catch(e){} passIn.focus(); });
+  } else {
+    setTimeout(function(){ passIn.focus(); }, 50);
+  }
+
+  function unlock(){
+    var pass = passIn.value.replace(/\s+/g, '');
+    if (!pass) return;
+    unlockBtn.disabled = true; lockMsg.textContent = 'Checking\u2026';
+    getMeta().then(function(m){ return deriveBits(pass, m).then(function(bits){ return tryKey(bits, m, true); }); })
+      .catch(function(err){
+        var wrong = err && (err.name === 'OperationError' || /decrypt/i.test(String(err.message || '')));
+        lockMsg.textContent = wrong ? 'Wrong passphrase \u2014 try again.' : 'Could not unlock: ' + (err && err.message || err);
+        unlockBtn.disabled = false;
+      });
+  }
+  unlockBtn.onclick = unlock;
+  passIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') unlock(); });
+  document.getElementById('showPass').onclick = function(){
+    var show = passIn.type === 'password';
+    passIn.type = show ? 'text' : 'password';
+    this.textContent = show ? 'Hide' : 'Show';
+  };
+})();
+</script>
+</body>
+</html>
